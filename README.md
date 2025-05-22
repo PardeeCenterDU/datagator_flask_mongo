@@ -46,7 +46,7 @@ Fill in the required fields (`DB_URI_PART1`, etc.)
 python app.py
 ```
 
-App will be available at `http://localhost:5000`.
+App will be available via a local host link.
 
 ---
 
