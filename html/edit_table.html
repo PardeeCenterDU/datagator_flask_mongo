@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Review Country Matches</title>
+  <title>Review Matches</title>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
   <style>
     table {
@@ -73,7 +73,7 @@
   </style>
 </head>
 <body>
-  <h2>Review Country Name Matches (Page {{ current_page }} of {{ total_pages }})</h2>
+  <h2>Review Name Matches (Page {{ current_page }} of {{ total_pages }})</h2>
 
   <form id="countryForm" action="/review_matches" method="POST">
     <input type="hidden" name="action" id="action-hidden" value="">

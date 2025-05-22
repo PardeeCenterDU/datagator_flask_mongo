@@ -42,11 +42,11 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 Fill in the required fields (`DB_URI_PART1`, etc.)
-Use this route to directly connect to a MongoDB database with country mapping
+Use this route to directly connect to a MongoDB database with territory mapping
 
 ### 4.b Connect to JSON data locally
 
-Use the JSON file under the data folder to read the country mapping database
+Use the JSON file under the data folder to read the territory mapping database
 
 ### 5. Run the app
 ```bash
