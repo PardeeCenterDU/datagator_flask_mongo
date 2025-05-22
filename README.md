@@ -1,5 +1,7 @@
 # DataGatorLite 🐊
 
+🔗 Try it now: [DataGator Lite](https://datagator-lite.onrender.com/)
+
 **DataGatorLite** is a lightweight web app built with Flask for uploading datasets and performing fuzzy matching against standardized International Futures territory names. It supports Excel and CSV formats, and allows manual review and editing of suggestions before exporting the cleaned data to a downloadable CSV file.
 
 ---
