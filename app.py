@@ -7,7 +7,7 @@ from collections import Counter
 from flask import Flask, request, render_template, session, redirect, send_file, after_this_request, jsonify
 from dotenv import load_dotenv
 from rapidfuzz import process as fuzzy_process, fuzz
-from country_mapping import get_countries_collection
+from country_mapping import load_country_data
 from flask_session import Session
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -315,9 +315,9 @@ def process_selection():
 
 
     # --- Country Matching ---
-    countries_collection = get_countries_collection()
+    country_docs = load_country_data()
     name_to_standard = {}
-    for doc in countries_collection.find({}, {"ifs_name": 1, "ifs_fipscode": 1, "alternative_names": 1}):
+    for doc in country_docs:
         std = doc["ifs_name"]
         fipscode = doc["ifs_fipscode"]
         name_to_standard[std.lower()] = std
@@ -434,15 +434,14 @@ def review_matches():
     page_data = {k: unmatched[k] for k in page_keys}
     default_selections = {k: confirmed.get(k, "") for k in page_keys}
 
-    countries_collection = get_countries_collection()
+    country_docs = load_country_data()
     standard_to_fipscode = {
         doc['ifs_name']: doc['ifs_fipscode']
-        for doc in countries_collection.find({}, {"ifs_name": 1, "ifs_fipscode": 1})
+        for doc in country_docs if 'ifs_name' in doc and 'ifs_fipscode' in doc
     }
 
     all_standard_names = sorted({
-        doc["ifs_name"]
-        for doc in countries_collection.find({}, {"ifs_name": 1})
+        doc["ifs_name"] for doc in country_docs if "ifs_name" in doc
     })
 
     return render_template(

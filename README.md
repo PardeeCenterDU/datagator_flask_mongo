@@ -35,11 +35,16 @@ source venv/bin/activate     # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Create a `.env` file
+### 4.a Create a `.env` file
 ```bash
 cp .env.example .env
 ```
 Fill in the required fields (`DB_URI_PART1`, etc.)
+Use this route to directly connect to a MongoDB database with country mapping
+
+### 4.b Connect to JSON data locally
+
+Use the JSON file under the data folder to read the country mapping database
 
 ### 5. Run the app
 ```bash
