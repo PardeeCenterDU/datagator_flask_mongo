@@ -7,7 +7,7 @@ from collections import Counter
 from flask import Flask, request, render_template, session, redirect, send_file, after_this_request, jsonify
 from dotenv import load_dotenv
 from rapidfuzz import process as fuzzy_process, fuzz
-from country_mapping import countries_collection
+from country_mapping import get_countries_collection
 from flask_session import Session
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -315,6 +315,7 @@ def process_selection():
 
 
     # --- Country Matching ---
+    countries_collection = get_countries_collection()
     name_to_standard = {}
     for doc in countries_collection.find({}, {"ifs_name": 1, "ifs_fipscode": 1, "alternative_names": 1}):
         std = doc["ifs_name"]
@@ -433,6 +434,7 @@ def review_matches():
     page_data = {k: unmatched[k] for k in page_keys}
     default_selections = {k: confirmed.get(k, "") for k in page_keys}
 
+    countries_collection = get_countries_collection()
     standard_to_fipscode = {
         doc['ifs_name']: doc['ifs_fipscode']
         for doc in countries_collection.find({}, {"ifs_name": 1, "ifs_fipscode": 1})
