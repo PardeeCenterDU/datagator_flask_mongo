@@ -1,0 +1,202 @@
+/* upload.css */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    background-color: #f4f4f9;
+}
+
+h1, h2, h3 {
+    text-align: left;
+    margin-top:0px;
+}
+
+.center-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+form {
+    margin-top: 10px;
+}
+
+/* Box styling */
+.box {
+    background-color: #ffffff;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    width: 100%;
+    max-width: 90%;  /* or 1200px */
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.method-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 🔒 exactly x columns */
+    gap: 20px;
+    margin-top: 20px;
+}
+  
+  
+.sub-box {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 250px;
+}
+  
+  
+.data-preview {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+/* Align selections and buttons */
+.selection-boxes {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start; /* 🔧 This ensures label and select align at top */
+}
+.selection-boxes > div {
+    display: flex;
+    flex-direction: column;
+}  
+
+/* Center-align submit buttons */
+.left-submit {
+    display: block;
+    margin: 0 auto;
+    margin-top: 10px;
+}
+
+table th:first-child, table td:first-child {
+    text-align: center;
+    font-weight: bold;
+    background-color: #f0f0f0;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 20px;
+  }
+  
+.pagination a,
+.pagination button,
+.button {
+    padding: 5px 10px;
+    font-size: 14px;
+    background-color: #f4f4f4;
+    border: 1px solid #aaa;
+    text-decoration: none;
+    color: #000;
+    cursor: pointer;
+}
+  
+.active-page {
+    font-weight: bold;
+    text-decoration: underline;
+    padding: 5px 10px;
+}
+  
+.upload-error {
+    color: red;
+    background-color: #ffe6e6;
+    border: 1px solid #cc0000;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.upload-box {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+  
+.scrollable-preview {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+    max-width: 100%;
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+  
+.preview-table {
+    border-collapse: collapse;
+    min-width: max-content; /* allows natural table width */
+}
+
+  
+.preview-table th, .preview-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    font-size: 14px;
+}
+  
+.preview-table td {
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selectable {
+    border: 2px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+  }
+  .selectable:hover {
+    background-color: #f9f9f9;
+  }
+  .selectable.active {
+    border-color: #007bff;
+    background-color: #eaf2ff;
+  }
+  .method-params {
+    margin-top: 10px;
+    display: none;
+  }
+  .selectable.active .method-params {
+    display: block;
+  }
+  

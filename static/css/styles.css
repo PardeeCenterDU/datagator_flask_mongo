@@ -1,0 +1,139 @@
+/* styles.css */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    text-align: center;
+}
+
+.table-container {
+    width: 60%;
+    max-height: 250px;
+    overflow-y: auto;
+    margin: 20px auto;
+    border: 1px solid #ddd;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+.editable {
+    background-color: #f9f9f9;
+}
+
+.editable:focus {
+    outline: none;
+    background-color: #e0f7fa;
+}
+
+button {
+    display: block;
+    margin: 20px auto;
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;  /* Distribute buttons evenly */
+    margin-top: 20px;
+}
+
+.button-container button {
+    padding: 10px 20px;
+    flex: 1;  /* Ensure buttons take equal space */
+    margin: 0 10px;  /* Add some space between buttons */
+    font-size: 16px;  /* Increase font size for better readability */
+}
+
+.button {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #eee;
+    border: 1px solid #aaa;
+    margin: 5px;
+    text-decoration: none;
+    color: #000;
+    font-size: 14px;
+  }
+  .button:hover {
+    background-color: #ddd;
+  }
+  
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .pagination a,
+  .pagination button,
+  .pagination span {
+    padding: 6px 10px;
+    font-size: 14px;
+    background-color: #f4f4f4;
+    border: 1px solid #aaa;
+    text-decoration: none;
+    color: #000;
+    cursor: pointer;
+  }
+  
+  .pagination .active-page {
+    font-weight: bold;
+    background-color: #ddd;
+    text-decoration: underline;
+  }
+  
+  .pagination button {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+  
+  .scrollable-table-wrapper {
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+  }
+  
+  .scrollable-table-wrapper table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .scrollable-table-wrapper th {
+    position: sticky;
+    top: 0;
+    background-color: #f7f7f7;
+    z-index: 2;
+    border-bottom: 2px solid #ccc;
+  }

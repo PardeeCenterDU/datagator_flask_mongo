@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+{% import "_pagination.html" as macros %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Review Country Matches</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      width: 300px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      vertical-align: top;
+      text-align: left;
+    }
+    .dropdown-container {
+      position: relative;
+    }
+    .dropdown-input {
+      width: 100%;
+      padding: 6px;
+    }
+    .dropdown-list {
+      position: absolute;
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: white;
+      border: 1px solid #ccc;
+      display: none;
+      z-index: 1000;
+    }
+    .dropdown-list div {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .dropdown-list div:hover {
+      background-color: #f0f0f0;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 20px;
+    }
+    .pagination a {
+      font-size: 14px;
+      color: blue;
+      text-decoration: none;
+      padding: 2px 6px;
+    }
+    .pagination a:hover {
+      text-decoration: underline;
+    }
+    .pagination .active-page {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .pagination button,
+    .button {
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #f4f4f4;
+      border: 1px solid #aaa;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>Review Country Name Matches (Page {{ current_page }} of {{ total_pages }})</h2>
+
+  <form id="countryForm" action="/review_matches" method="POST">
+    <input type="hidden" name="action" id="action-hidden" value="">
+    <input type="hidden" name="current_page" value="{{ current_page }}">
+
+    <div style="margin-bottom: 10px;">
+      <label for="per_page">Show:</label>
+      <select id="per_page" name="per_page" onchange="submitPerPageChange()">
+        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+        <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+      </select> rows per page
+    </div>
+
+    <div class="scrollable-table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Original Name</th>
+            <th>Matched Standard Name</th>
+          </tr>
+          <tr>
+            <th><input type="text" class="filter-input" data-col="0" placeholder="Search original..."></th>
+            <th><input type="text" class="filter-input" data-col="1" placeholder="Search matched..."></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for original in unmatched_countries %}
+          <tr>
+            <td>{{ original }}</td>
+            <td>
+              <div class="dropdown-container">
+                <input type="text"
+                       class="dropdown-input"
+                       name="standard_names[]"
+                       data-original="{{ original }}"
+                       value="{{ default_selections[original] }}"
+                       autocomplete="off"
+                       placeholder="Type or select...">
+                <div class="dropdown-list"></div>
+              </div>
+              <input type="hidden" name="original_names[]" value="{{ original }}">
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      {{ macros.pagination_controls(current_page, total_pages, per_page) }}
+    </div>
+
+    <div class="pagination">
+      <a href="/preview_data" class="button">← Back to Upload</a>
+      <a href="/reset_matches" class="button">Reset All</a>
+      <a href="/reset_matches?page={{ current_page }}&per_page={{ per_page }}&scope=page" class="button">Reset This Page</a>
+      <a href="/download_file" class="button" onclick="saveEditsBeforeDownload(event)">Submit & Download File</a>
+    </div>
+  </form>
+
+  <script>
+    const unmatchedCountries = {{ unmatched_countries | tojson }};
+    const fipscodes = {{ fipscodes | tojson }};
+    const allStandardNames = {{ all_standard_names | tojson }};
+
+    document.querySelectorAll('.dropdown-input').forEach((input) => {
+      const dropdown = input.nextElementSibling;
+      const row = input.closest('tr');
+      const originalName = row.querySelector('input[name="original_names[]"]').value;
+
+      function updateDropdown() {
+        let suggestions = unmatchedCountries[originalName];
+        if (!suggestions || suggestions.length === 0) {
+            suggestions = allStandardNames.map(name => [name, 0]);
+        }
+
+        const typed = input.value.toLowerCase();
+        const filtered = typed === ""
+            ? suggestions
+            : suggestions.filter(([name, _]) => name.toLowerCase().includes(typed));
+
+        dropdown.innerHTML = '';
+        filtered.forEach(([name, score]) => {
+          const div = document.createElement('div');
+          const label = fipscodes[name] ? `${name} (${fipscodes[name]})` : name;
+          div.textContent = score > 0 ? `${label} (${score}%)` : label;
+          div.setAttribute('data-value', name);
+          div.onclick = () => {
+            input.value = name;
+            dropdown.style.display = 'none';
+          };
+          dropdown.appendChild(div);
+        });
+
+        dropdown.style.display = filtered.length ? 'block' : 'none';
+      }
+
+      input.addEventListener('focus', updateDropdown);
+      input.addEventListener('input', updateDropdown);
+      input.addEventListener('blur', () => setTimeout(() => dropdown.style.display = 'none', 200));
+    });
+
+    function submitPerPageChange() {
+      const form = document.getElementById('countryForm');
+      document.getElementById('action-hidden').value = 'change_per_page';
+      form.querySelector('input[name="current_page"]').value = '1';
+      form.submit();
+    }
+
+    function saveEditsBeforeDownload(event) {
+      event.preventDefault();
+
+      const form = document.getElementById('countryForm');
+      const actionInput = document.getElementById('action-hidden');
+      const pageInput = form.querySelector('input[name="current_page"]');
+
+      actionInput.value = 'finish';
+
+      const formData = new FormData(form);
+
+      fetch('/review_matches', {
+        method: 'POST',
+        body: formData,
+      }).then(response => {
+        // Wait for confirmation from the server
+        return response.text();
+      }).then(() => {
+        // Now redirect to the real download route
+        window.location.href = '/download_file';
+      }).catch(err => {
+        alert('Failed to prepare download. Please try again.');
+        console.error(err);
+      });
+    }
+
+    // Only intercept pagination link clicks, NOT form buttons
+    document.querySelectorAll('.pagination a.page-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const form = document.getElementById('countryForm');
+        const hiddenAction = document.getElementById('action-hidden');
+        const pageInput = form.querySelector('input[name="current_page"]');
+        const perPageInput = form.querySelector('select[name="per_page"]');
+
+        const targetURL = new URL(this.href, window.location.origin);
+
+        hiddenAction.value = 'save_and_go';
+        pageInput.value = targetURL.searchParams.get('page') || '1';
+        perPageInput.value = targetURL.searchParams.get('per_page') || perPageInput.value;
+
+        form.action = targetURL.pathname;
+        form.submit();
+    });
+    });
+
+    document.querySelectorAll('.filter-input').forEach(input => {
+      input.addEventListener('input', () => {
+        const colIndex = parseInt(input.dataset.col, 10);
+        const filterText = input.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+          const cell = row.cells[colIndex];
+          const cellText = cell ? cell.textContent.toLowerCase() : '';
+          row.style.display = cellText.includes(filterText) ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

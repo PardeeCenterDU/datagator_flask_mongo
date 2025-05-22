@@ -1,0 +1,31 @@
+{% macro pagination_controls(current_page, total_pages, per_page) %}
+<div class="pagination">
+  {% if current_page < total_pages %}
+    <a href="{{ url_for('review_matches', page=current_page + 1, per_page=per_page) }}" class="button page-link">Next →</a>
+  {% endif %}
+
+  <a href="{{ url_for('review_matches', page=1, per_page=per_page) }}" class="button page-link {% if current_page == 1 %}active-page{% endif %}">1</a>
+
+  {% if current_page > 4 %}
+    <span>...</span>
+  {% endif %}
+
+  {% for p in range(current_page - 2, current_page + 3) %}
+    {% if 1 < p < total_pages %}
+      <a href="{{ url_for('review_matches', page=p, per_page=per_page) }}" class="button page-link {% if p == current_page %}active-page{% endif %}">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if current_page < total_pages - 3 %}
+    <span>...</span>
+  {% endif %}
+
+  {% if total_pages > 1 %}
+    <a href="{{ url_for('review_matches', page=total_pages, per_page=per_page) }}" class="button page-link {% if current_page == total_pages %}active-page{% endif %}">{{ total_pages }}</a>
+  {% endif %}
+
+  {% if current_page > 1 %}
+    <a href="{{ url_for('review_matches', page=current_page - 1, per_page=per_page) }}" class="button page-link">← Previous</a>
+  {% endif %}
+</div>
+{% endmacro %}

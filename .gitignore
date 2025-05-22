@@ -1,0 +1,50 @@
+# Virtual environment
+venv/
+.env
+.env.*
+
+# Flask session data
+flask_session/
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# VS Code/Visual Studio
+.vscode/
+.vs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and runtime files
+*.log
+*.sqlite
+*.db
+
+# Temporary uploads or generated files
+*.tmp
+*.bak
+*.swp
+
+# Compiled C extensions or wheels
+*.so
+*.egg-info/
+dist/
+build/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# pytest
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Installer logs
+pip-log.txt

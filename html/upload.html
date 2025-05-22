@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload and Select Data</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/upload.css') }}">
+</head>
+<body>
+
+    <!-- First Box: File Upload and Sheet Selection -->
+    <div class="box">
+        <h2>Step 1: Upload Excel/CSV File</h2>
+
+        <!-- Display File Upload Form -->
+        <form action="/upload" method="post" enctype="multipart/form-data" style="display: flex; align-items: center; gap: 10px;">
+            <input type="file" name="file" accept=".xlsx, .csv">
+            <input type="submit" value="Upload">
+
+            {% if file_name %}
+                <span><strong>File loaded:</strong> {{ file_name }}</span>
+            {% endif %}
+        </form>
+
+        {% if error %}
+        <div class="upload-error">
+        {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- Sheet Selection -->
+        {% if sheets %}
+        <form action="/preview_data" method="post" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+            <label for="sheet_name" style="font-weight: bold;">Select a worksheet:</label>
+        
+            <select name="sheet_name" id="sheet_name" {% if file_name.endswith('.csv') %}disabled{% endif %}>
+                {% for sheet in sheets %}
+                    <option value="{{ sheet }}" {% if sheet == sheet_name %}selected{% endif %}>{{ sheet }}</option>
+                {% endfor %}
+            </select>
+        
+            <input type="submit" value="Confirm">
+            
+            {% if sheet_name %}
+              <span><strong>Sheet selected:</strong> {{ sheet_name }}</span>
+            {% endif %}
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Second Box: Data Preview -->
+    {% if preview_data %}
+        <div class="box">
+            <h2>Step 2: Data Preview</h2>
+            <legend>Preview of the first 20 rows</legend>
+            <div class="scrollable-preview">
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>Index</th>
+                            {% for column in columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in preview_data %}
+                            <tr>
+                                <td>{{ data.index }}</td>
+                                {% for cell in data.row %}
+                                    <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <form id="selectionForm" action="/process_selection" method="post" style="margin-top: 10px;">
+                <fieldset>
+                    <legend>Select rows/columns with territory names</legend>
+                    <div class="selection-boxes">
+                        <div>
+                            <label for="rows">Rows:</label>
+                            <select id="row-select" name="rows" multiple size="6" onchange="saveSelections()">
+                            <option value="index" {% if 'index' in selected_rows %}selected{% endif %}>Index (row labels)</option>
+                            <option disabled>──────────</option>
+                            {% for i in range(0, num_rows) %}
+                                <option value="row-{{ i }}" {% if 'row-' ~ i in selected_rows %}selected{% endif %}>Row {{ i }}</option>
+                            {% endfor %}
+                            </select>
+                            <button type="button" onclick="clearSelect('row')" aria-label="Clear selected rows">Clear Rows</button>
+                        </div>          
+                    
+                        <div>
+                            <label for="columns">Columns:</label>
+                            <select id="col-select" name="columns" multiple size="6" onchange="saveSelections()">
+                            <option value="header" {% if 'header' in selected_cols %}selected{% endif %}>Headers (column names)</option>
+                            <option disabled>──────────</option>
+                            {% for col in columns %}
+                                <option value="col-{{ loop.index0 }}" {% if 'col-' ~ loop.index0 in selected_cols %}selected{% endif %}>{{ col }}</option>
+                            {% endfor %}
+                            </select>
+                            <button type="button" onclick="clearSelect('col')" aria-label="Clear selected columns">Clear Columns</button>
+                        </div>
+                    </div>
+                    <small>
+                        (Default = No selection = Select all; Ctrl+Click to deselect or select multiple)
+                    </small>
+                </fieldset>
+            </form>
+        </div>
+    {% endif %}
+
+    {% if columns|length > 0 %}
+    <div class="box">
+      <h2>Step 3: Name-matching</h2>
+    
+      <form id="matchForm" action="/process_selection" method="post" onsubmit="return handleMatchSubmit(event);">
+        <div class="method-grid">
+    
+          <!-- Sub-box 1: Fuzzy Matching -->
+          <div class="sub-box selectable" data-method="fuzzy" onclick="selectMethod('fuzzy')">
+            <h3>Fuzzy Match</h3>
+            <p>rapidfuzz with token_sort_ratio to suggest name matches. Higher threshold enforces stricter matching.</p>
+            <div class="method-params" id="params-fuzzy">
+              <label for="threshold">
+                Threshold: <span id="threshold-value">{{ threshold or 80 }}</span>%
+              </label><br>
+              <input type="range" id="threshold" name="threshold" min="0" max="100" step="1"
+                     value="{{ threshold or 80 }}"
+                     oninput="document.getElementById('threshold-value').textContent = this.value"
+                     style="width: 100%;">
+    
+              <input type="submit" value="Match Names" class="button" style="margin-top: 10px;">
+            </div>
+          </div>
+    
+          <!-- Sub-box 2: SpaCy -->
+          <div class="sub-box selectable" data-method="spacy" onclick="selectMethod('spacy')">
+            <h3>SpaCy (NLP)</h3>
+            <p>Coming soon: match using named entity recognition and semantic similarity.</p>
+          </div>
+    
+          <!-- Sub-box 3: AI-Assisted -->
+          <div class="sub-box selectable" data-method="ai" onclick="selectMethod('ai')">
+            <h3>AI-Assisted</h3>
+            <p>Coming soon: match using large language models with domain-specific reasoning.</p>
+          </div>
+    
+        </div>
+    
+        <!-- Hidden input for selected method -->
+        <input type="hidden" name="method" id="selected-method" value="fuzzy">
+      </form>
+    </div>
+    {% endif %}
+    
+
+    <script>
+        function getSelections() {
+            const rowSelect = document.getElementById("row-select");
+            const colSelect = document.getElementById("col-select");
+
+            const selectedRows = Array.from(rowSelect.selectedOptions).map(opt => opt.value);
+            const selectedCols = Array.from(colSelect.selectedOptions).map(opt => opt.value);
+
+            return { selectedRows, selectedCols };
+        }
+    
+        function saveSelections() {
+            const { selectedRows, selectedCols } = getSelections();
+            console.log("📤 Sending rows:", selectedRows);
+            console.log("📤 Sending cols:", selectedCols);
+            return fetch('/save_selection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows: selectedRows, cols: selectedCols })
+            });
+        }
+    
+        function clearSelect(name) {
+            const select = document.getElementById(`${name}-select`);
+            if (!select) return;
+
+            // Fully clear all selections
+            for (let i = 0; i < select.options.length; i++) {
+                select.options[i].selected = false;
+            }
+
+            // Trigger a change event to refresh UI and invoke saveSelections
+            const event = new Event('change', { bubbles: true });
+            select.dispatchEvent(event);
+        }
+    
+        function handleMatchSubmit(event) {
+            event.preventDefault();  // prevent default form submission
+            saveSelections()
+            .then(res => {
+                if (res.ok) {
+                    document.getElementById('matchForm').submit();  // submit after saving
+                } else {
+                    alert("Failed to save selections.");
+                }
+            })
+            .catch(err => {
+                console.error("Save error:", err);
+                alert("Error saving selections.");
+            });
+            return false;
+        }
+
+        function selectMethod(method) {
+            document.getElementById('selected-method').value = method;
+
+            document.querySelectorAll('.selectable').forEach(card => {
+            card.classList.remove('active');
+            });
+
+            const activeCard = document.querySelector(`[data-method="${method}"]`);
+            if (activeCard) activeCard.classList.add('active');
+        }
+
+        // Activate default method on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const initial = document.getElementById('selected-method').value || 'fuzzy';
+            selectMethod(initial);
+        });
+
+    </script>
+    
+
+</body>
+</html>
