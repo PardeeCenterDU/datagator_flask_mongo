@@ -58,8 +58,5 @@ MIT License — feel free to use and adapt.
 
 ## 🙌 Credits
 
-Built by Yutang Xiong. Uses:
-- Flask
-- pandas
-- RapidFuzz
-- MongoDB (via PyMongo)
+Built by Yutang Xiong  
+Contact: [yutang.xiong@du.edu](mailto:yutang.xiong@du.edu)
