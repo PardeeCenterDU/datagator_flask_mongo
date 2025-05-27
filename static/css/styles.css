@@ -164,3 +164,7 @@ button,
   padding: 8px;
   cursor: pointer;
 }
+
+.mismatch-row {
+  background-color: #6695e6; /* Light red to show mismatch */
+}

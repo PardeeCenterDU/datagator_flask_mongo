@@ -70,113 +70,132 @@
   </form>
 
   <script>
-    const unmatchedCountries = {{ unmatched_countries | tojson }};
-    const fipscodes = {{ fipscodes | tojson }};
-    const allStandardNames = {{ all_standard_names | tojson }};
+  const unmatchedCountries = {{ unmatched_countries | tojson }};
+  const fipscodes = {{ fipscodes | tojson }};
+  const allStandardNames = {{ all_standard_names | tojson }};
 
-    document.querySelectorAll('.dropdown-input').forEach((input) => {
-      const dropdown = input.nextElementSibling;
-      const row = input.closest('tr');
-      const originalName = row.querySelector('input[name="original_names[]"]').value;
+  // ✅ Check if matched name differs from original
+  function checkMismatchHighlight(inputElement, rowElement) {
+    const original = inputElement.dataset.original?.trim().toLowerCase();
+    const current = inputElement.value?.trim().toLowerCase();
 
-      function updateDropdown() {
-        let suggestions = unmatchedCountries[originalName];
-        if (!suggestions || suggestions.length === 0) {
-            suggestions = allStandardNames.map(name => [name, 0]);
-        }
+    if (original && current && original !== current) {
+      rowElement.classList.add("mismatch-row");
+    } else {
+      rowElement.classList.remove("mismatch-row");
+    }
+  }
 
-        const typed = input.value.toLowerCase();
-        const filtered = typed === ""
-            ? suggestions
-            : suggestions.filter(([name, _]) => name.toLowerCase().includes(typed));
+  // ✅ Initialize dropdown behavior
+  document.querySelectorAll('.dropdown-input').forEach((input) => {
+    const dropdown = input.nextElementSibling;
+    const row = input.closest('tr');
+    const originalName = row.querySelector('input[name="original_names[]"]').value;
 
-        dropdown.innerHTML = '';
-        filtered.forEach(([name, score]) => {
-          const div = document.createElement('div');
-          const label = fipscodes[name] ? `${name} (${fipscodes[name]})` : name;
-          div.textContent = score > 0 ? `${label} (${score}%)` : label;
-          div.setAttribute('data-value', name);
-          div.onclick = () => {
-            input.value = name;
-            dropdown.style.display = 'none';
-          };
-          dropdown.appendChild(div);
-        });
-
-        dropdown.style.display = filtered.length ? 'block' : 'none';
+    function updateDropdown() {
+      let suggestions = unmatchedCountries[originalName];
+      if (!suggestions || suggestions.length === 0) {
+        suggestions = allStandardNames.map(name => [name, 0]);
       }
 
-      input.addEventListener('focus', updateDropdown);
-      input.addEventListener('input', updateDropdown);
-      input.addEventListener('blur', () => setTimeout(() => dropdown.style.display = 'none', 200));
-    });
+      const typed = input.value.toLowerCase();
+      const filtered = typed === ""
+        ? suggestions
+        : suggestions.filter(([name, _]) => name.toLowerCase().includes(typed));
 
-    function submitPerPageChange() {
-      const form = document.getElementById('countryForm');
-      document.getElementById('action-hidden').value = 'change_per_page';
-      form.querySelector('input[name="current_page"]').value = '1';
-      form.submit();
+      dropdown.innerHTML = '';
+      filtered.forEach(([name, score]) => {
+        const div = document.createElement('div');
+        const label = fipscodes[name] ? `${name} (${fipscodes[name]})` : name;
+        div.textContent = score > 0 ? `${label} (${score}%)` : label;
+        div.setAttribute('data-value', name);
+        div.onclick = () => {
+          input.value = name;
+          dropdown.style.display = 'none';
+          checkMismatchHighlight(input, row);
+        };
+        dropdown.appendChild(div);
+      });
+
+      dropdown.style.display = filtered.length ? 'block' : 'none';
     }
 
-    function saveEditsBeforeDownload(event) {
-      event.preventDefault();
+    input.addEventListener('focus', updateDropdown);
+    input.addEventListener('input', () => {
+      updateDropdown();
+      checkMismatchHighlight(input, row);
+    });
+    input.addEventListener('blur', () => setTimeout(() => dropdown.style.display = 'none', 200));
+  });
 
-      const form = document.getElementById('countryForm');
-      const actionInput = document.getElementById('action-hidden');
-      const pageInput = form.querySelector('input[name="current_page"]');
+  // ✅ Run once after full page load to catch pre-filled mismatches
+  window.onload = function () {
+    document.querySelectorAll('.dropdown-input').forEach((input) => {
+      const row = input.closest('tr');
+      checkMismatchHighlight(input, row);
+    });
+  };
 
-      actionInput.value = 'finish';
+  function submitPerPageChange() {
+    const form = document.getElementById('countryForm');
+    document.getElementById('action-hidden').value = 'change_per_page';
+    form.querySelector('input[name="current_page"]').value = '1';
+    form.submit();
+  }
 
-      const formData = new FormData(form);
+  function saveEditsBeforeDownload(event) {
+    event.preventDefault();
+    const form = document.getElementById('countryForm');
+    const actionInput = document.getElementById('action-hidden');
+    const pageInput = form.querySelector('input[name="current_page"]');
+    actionInput.value = 'finish';
+    const formData = new FormData(form);
 
-      fetch('/review_matches', {
-        method: 'POST',
-        body: formData,
-      }).then(response => {
-        // Wait for confirmation from the server
-        return response.text();
-      }).then(() => {
-        // Now redirect to the real download route
+    fetch('/review_matches', {
+      method: 'POST',
+      body: formData,
+    }).then(response => response.text())
+      .then(() => {
         window.location.href = '/download_file';
       }).catch(err => {
         alert('Failed to prepare download. Please try again.');
         console.error(err);
       });
-    }
+  }
 
-    // Only intercept pagination link clicks, NOT form buttons
-    document.querySelectorAll('.pagination a.page-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const form = document.getElementById('countryForm');
-        const hiddenAction = document.getElementById('action-hidden');
-        const pageInput = form.querySelector('input[name="current_page"]');
-        const perPageInput = form.querySelector('select[name="per_page"]');
+  // Intercept pagination links
+  document.querySelectorAll('.pagination a.page-link').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const form = document.getElementById('countryForm');
+      const hiddenAction = document.getElementById('action-hidden');
+      const pageInput = form.querySelector('input[name="current_page"]');
+      const perPageInput = form.querySelector('select[name="per_page"]');
 
-        const targetURL = new URL(this.href, window.location.origin);
+      const targetURL = new URL(this.href, window.location.origin);
+      hiddenAction.value = 'save_and_go';
+      pageInput.value = targetURL.searchParams.get('page') || '1';
+      perPageInput.value = targetURL.searchParams.get('per_page') || perPageInput.value;
 
-        hiddenAction.value = 'save_and_go';
-        pageInput.value = targetURL.searchParams.get('page') || '1';
-        perPageInput.value = targetURL.searchParams.get('per_page') || perPageInput.value;
-
-        form.action = targetURL.pathname;
-        form.submit();
+      form.action = targetURL.pathname;
+      form.submit();
     });
-    });
+  });
 
-    document.querySelectorAll('.filter-input').forEach(input => {
-      input.addEventListener('input', () => {
-        const colIndex = parseInt(input.dataset.col, 10);
-        const filterText = input.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
+  // Table filtering
+  document.querySelectorAll('.filter-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const colIndex = parseInt(input.dataset.col, 10);
+      const filterText = input.value.toLowerCase();
+      const rows = document.querySelectorAll('tbody tr');
 
-        rows.forEach(row => {
-          const cell = row.cells[colIndex];
-          const cellText = cell ? cell.textContent.toLowerCase() : '';
-          row.style.display = cellText.includes(filterText) ? '' : 'none';
-        });
+      rows.forEach(row => {
+        const cell = row.cells[colIndex];
+        const cellText = cell ? cell.textContent.toLowerCase() : '';
+        row.style.display = cellText.includes(filterText) ? '' : 'none';
       });
     });
+  });
   </script>
 </body>
 </html>
