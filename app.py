@@ -105,8 +105,8 @@ app = Flask(__name__, template_folder='html')
 # This tells Flask to store session data on disk in a temporary directory, which allows much larger payloads
 app.config['SESSION_TYPE'] = 'filesystem'  # Store sessions in the local file system
 app.config['SESSION_PERMANENT'] = False
-# Enforce a size limit of 15mb to the app
-app.config['MAX_CONTENT_LENGTH'] = 15 * 1024 * 1024  # 15 MB
+# Enforce a size limit of 30mb to the app
+app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024  # 30 MB
 Session(app)
 #
 app.secret_key = os.getenv('SECRET_KEY')
@@ -551,9 +551,9 @@ def download_file():
 @app.errorhandler(RequestEntityTooLarge)
 def handle_large_file(error):
     """
-    Custom handler for files >15MB
+    Custom handler for files >30MB
     """
-    return render_template("upload.html", error="File too large. Please upload a file under 15MB."), 413
+    return render_template("upload.html", error="File too large. Please upload a file under 30MB."), 413
 
 
 if __name__ == '__main__':
