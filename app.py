@@ -547,6 +547,32 @@ def download_file():
     )
 
 
+@app.route('/download_mapping')
+def download_mapping():
+    """Download a CSV of the original to matched name mapping."""
+    confirmed = session.get('confirmed_mappings', {})
+    file_name = session.get('file_name', 'mapping.csv')
+
+    mapping_df = pd.DataFrame(
+        [(orig, match) for orig, match in confirmed.items()],
+        columns=['original_name', 'matched_name']
+    )
+
+    buffer = io.StringIO()
+    mapping_df.to_csv(buffer, index=False)
+    buffer.seek(0)
+
+    base = os.path.splitext(secure_filename(file_name))[0]
+    download_name = f"{base}_mapping.csv"
+
+    return send_file(
+        io.BytesIO(buffer.getvalue().encode('utf-8')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=download_name
+    )
+
+
 
 @app.errorhandler(RequestEntityTooLarge)
 def handle_large_file(error):

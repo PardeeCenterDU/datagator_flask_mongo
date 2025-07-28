@@ -65,6 +65,7 @@
       <a href="/preview_data" class="button">← Back to Upload</a>
       <a href="/reset_matches" class="button">Reset All</a>
       <a href="/reset_matches?page={{ current_page }}&per_page={{ per_page }}&scope=page" class="button">Reset This Page</a>
+      <a href="/download_mapping" class="button" onclick="saveMapping(event)">Save Mapping</a>
       <a href="/download_file" class="button" onclick="saveEditsBeforeDownload(event)">Submit & Download File</a>
     </div>
   </form>
@@ -159,6 +160,25 @@
         window.location.href = '/download_file';
       }).catch(err => {
         alert('Failed to prepare download. Please try again.');
+      console.error(err);
+      });
+  }
+
+  function saveMapping(event) {
+    event.preventDefault();
+    const form = document.getElementById('countryForm');
+    const actionInput = document.getElementById('action-hidden');
+    actionInput.value = 'finish';
+    const formData = new FormData(form);
+
+    fetch('/review_matches', {
+      method: 'POST',
+      body: formData,
+    }).then(response => response.text())
+      .then(() => {
+        window.location.href = '/download_mapping';
+      }).catch(err => {
+        alert('Failed to prepare mapping. Please try again.');
         console.error(err);
       });
   }
